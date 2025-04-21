@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
@@ -15,6 +15,11 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <Image
+        source={require('../assets/otofix_logo.jpg')}
+        style={styles.logo}
+      />
+
       <Text style={styles.title}>Giriş Yap</Text>
 
       <TextInput
@@ -40,6 +45,13 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#eef1f5' },
+  logo: {
+    width: 240,
+    height: 80,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+    marginBottom: 24,
+  },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
   input: {
     backgroundColor: '#fff',
