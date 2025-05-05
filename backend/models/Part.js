@@ -7,3 +7,4 @@ const PartSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Part', PartSchema);
+

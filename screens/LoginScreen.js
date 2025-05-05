@@ -1,16 +1,33 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import axios from 'axios';
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    if (email && password) {
-      navigation.navigate('Chat'); // Chat ekranına geç
-    } else {
-      alert('Lütfen tüm alanları doldurun.');
+  const handleLogin = async () => {
+    if (!email || !password) {
+      Alert.alert('Uyarı', 'Lütfen tüm alanları doldurun.');
+      return;
     }
+
+    try {
+      const res = await axios.post('http://172.20.10.2:5000/api/auth/login', {  
+        email,
+        password
+      });
+
+      Alert.alert('Başarılı', 'Giriş başarılı!');
+      navigation.navigate('Chat');
+    } catch (error) {
+      console.error(error.response?.data || error.message);
+      Alert.alert('Hata', error.response?.data?.msg || 'Giriş başarısız.');
+    }
+  };
+
+  const goToRegister = () => {
+    navigation.navigate('Register');
   };
 
   return (
@@ -25,6 +42,8 @@ export default function LoginScreen({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="E-posta"
+        keyboardType="email-address"
+        autoCapitalize="none"
         value={email}
         onChangeText={setEmail}
       />
@@ -37,7 +56,11 @@ export default function LoginScreen({ navigation }) {
       />
 
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Giriş</Text>
+        <Text style={styles.buttonText}>Giriş Yap</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity onPress={goToRegister}>
+        <Text style={styles.switchText}>Hesabın yok mu? Kayıt ol</Text>
       </TouchableOpacity>
     </View>
   );
@@ -66,5 +89,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: 'center'
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' }
+  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  switchText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#007bff',
+    textAlign: 'center',
+    textDecorationLine: 'underline'
+  }
 });

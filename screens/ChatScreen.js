@@ -4,12 +4,12 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  FlatList,
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  Image
 } from 'react-native';
 
 export default function ChatScreen({ navigation }) {
@@ -43,21 +43,31 @@ export default function ChatScreen({ navigation }) {
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
 
+          {/* Başlık ve Logo */}
           <View style={styles.header}>
             <Text style={styles.headerText}>🔧 Yedek Parça Asistanı</Text>
+            <Image
+              source={require('../assets/otofix_logo.jpg')}
+              style={styles.logo}
+            />
           </View>
 
-          <FlatList
-            style={styles.chatBox}
-            data={messages}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={[styles.messageBubble, item.sender === 'user' ? styles.userBubble : styles.botBubble]}>
+          {/* Mesajlar */}
+          <View style={styles.chatBox}>
+            {messages.map((item) => (
+              <View
+                key={item.id}
+                style={[
+                  styles.messageBubble,
+                  item.sender === 'user' ? styles.userBubble : styles.botBubble,
+                ]}
+              >
                 <Text style={styles.messageText}>{item.text}</Text>
               </View>
-            )}
-          />
+            ))}
+          </View>
 
+          {/* Mesaj Gönderme Alanı */}
           <View style={styles.inputArea}>
             <TextInput
               style={styles.input}
@@ -71,24 +81,23 @@ export default function ChatScreen({ navigation }) {
             </TouchableOpacity>
           </View>
 
-          <FlatList
-            data={suggestedParts}
-            keyExtractor={(item) => item.id}
-            ListHeaderComponent={() =>
-              suggestedParts.length > 0 && <Text style={styles.partsTitle}>💡 Önerilen Parçalar</Text>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.partCard}>
-                <View>
-                  <Text style={styles.partName}>🔩 {item.name}</Text>
-                  <Text style={styles.partPrice}>{item.price}</Text>
+          {/* Önerilen Parçalar */}
+          {suggestedParts.length > 0 && (
+            <>
+              <Text style={styles.partsTitle}>💡 Önerilen Parçalar</Text>
+              {suggestedParts.map((item) => (
+                <View key={item.id} style={styles.partCard}>
+                  <View>
+                    <Text style={styles.partName}>🔩 {item.name}</Text>
+                    <Text style={styles.partPrice}>{item.price}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.cartButton}>
+                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sepete Ekle</Text>
+                  </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.cartButton}>
-                  <Text style={{ color: '#fff' }}>Sepete Ekle</Text>
-                </TouchableOpacity>
-              </View>
-            )}
-          />
+              ))}
+            </>
+          )}
 
           {/* Fiyat Listesi Butonu */}
           <TouchableOpacity
@@ -96,6 +105,14 @@ export default function ChatScreen({ navigation }) {
             onPress={() => navigation.navigate('FiyatListesi')}
           >
             <Text style={{ color: '#fff', fontWeight: 'bold' }}>📋 Yedek Parça Fiyat Listesi</Text>
+          </TouchableOpacity>
+
+          {/* Arabam Ne Kadar Butonu */}
+          <TouchableOpacity
+            style={styles.carValueButton}
+            onPress={() => navigation.navigate('Arabam')}
+          >
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>🚗 Arabam Ne Kadar?</Text>
           </TouchableOpacity>
 
         </ScrollView>
@@ -107,40 +124,46 @@ export default function ChatScreen({ navigation }) {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#eef1f5',
+    backgroundColor: '#f2f5f9',
   },
   container: {
-    padding: 12,
+    padding: 16,
     paddingBottom: 30,
   },
   header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#007bff',
     padding: 16,
-    borderRadius: 12,
-    marginBottom: 10,
+    borderRadius: 14,
+    marginBottom: 12,
   },
   headerText: {
     color: '#fff',
     fontSize: 20,
     fontWeight: 'bold',
-    textAlign: 'center',
+  },
+  logo: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
   },
   chatBox: {
-    maxHeight: 200,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   messageBubble: {
-    marginVertical: 5,
+    marginVertical: 6,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 16,
     maxWidth: '80%',
   },
   userBubble: {
-    backgroundColor: '#d0ebff',
+    backgroundColor: '#d1e7ff',
     alignSelf: 'flex-end',
   },
   botBubble: {
-    backgroundColor: '#f1f1f1',
+    backgroundColor: '#e9ecef',
     alignSelf: 'flex-start',
   },
   messageText: {
@@ -149,14 +172,14 @@ const styles = StyleSheet.create({
   inputArea: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 16,
     gap: 10,
   },
   input: {
     flex: 1,
     backgroundColor: '#fff',
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 14,
     fontSize: 16,
   },
   sendButton: {
@@ -168,19 +191,20 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 8,
+    marginTop: 8,
   },
   partCard: {
     backgroundColor: '#fff',
-    padding: 14,
-    borderRadius: 12,
-    marginBottom: 10,
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     shadowColor: '#000',
     shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 6,
+    elevation: 3,
   },
   partName: {
     fontSize: 16,
@@ -189,19 +213,26 @@ const styles = StyleSheet.create({
   partPrice: {
     marginTop: 4,
     fontSize: 14,
-    color: '#333',
+    color: '#555',
   },
   cartButton: {
     backgroundColor: '#28a745',
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 10,
   },
   priceListButton: {
     marginTop: 10,
     backgroundColor: '#6c757d',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 14,
+    alignItems: 'center',
+  },
+  carValueButton: {
+    marginTop: 10,
+    backgroundColor: '#17a2b8',
+    padding: 14,
+    borderRadius: 14,
     alignItems: 'center',
   },
 });

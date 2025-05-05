@@ -1,0 +1,173 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import axios from 'axios';
+import { Picker } from '@react-native-picker/picker';
+import structuredData from '../data/carData.json'; // dışa aktarılan json yapısı burada olacak
+
+export default function ArabamScreen() {
+  const [formData, setFormData] = useState({
+    Marka: '',
+    Seri: '',
+    Model: '',
+    Yıl: '',
+    YakıtTipi: '',
+    VitesTipi: '',
+    Kilometre: '',
+  });
+
+  const [seriesList, setSeriesList] = useState([]);
+  const [modelList, setModelList] = useState([]);
+  const [yearList, setYearList] = useState([]);
+  const [fuelList, setFuelList] = useState([]);
+  const [gearList, setGearList] = useState([]);
+  const [estimatedPrice, setEstimatedPrice] = useState(null);
+
+  useEffect(() => {
+    if (formData.Marka) {
+      const seriesSet = new Set(
+        Object.keys(structuredData[formData.Marka] || {}).map(model => model.split(' ')[0])
+      );
+      setSeriesList(Array.from(seriesSet));
+      setFormData({ ...formData, Seri: '', Model: '', Yıl: '', YakıtTipi: '', VitesTipi: '' });
+    }
+  }, [formData.Marka]);
+
+  useEffect(() => {
+    if (formData.Marka && formData.Seri) {
+      const models = Object.keys(structuredData[formData.Marka] || {}).filter(model => model.startsWith(formData.Seri));
+      setModelList(models);
+      setFormData({ ...formData, Model: '', Yıl: '', YakıtTipi: '', VitesTipi: '' });
+    }
+  }, [formData.Seri]);
+
+  useEffect(() => {
+    if (formData.Marka && formData.Model) {
+      const options = structuredData[formData.Marka][formData.Model] || [];
+      const years = Array.from(new Set(options.map(opt => opt.Yıl))).sort();
+      setYearList(years);
+      setFormData({ ...formData, Yıl: '', YakıtTipi: '', VitesTipi: '' });
+    }
+  }, [formData.Model]);
+
+  useEffect(() => {
+    if (formData.Marka && formData.Model && formData.Yıl) {
+      const options = structuredData[formData.Marka][formData.Model] || [];
+      const filtered = options.filter(opt => opt.Yıl === formData.Yıl);
+      const fuels = Array.from(new Set(filtered.map(opt => opt.YakıtTipi)));
+      const gears = Array.from(new Set(filtered.map(opt => opt.VitesTipi)));
+      setFuelList(fuels);
+      setGearList(gears);
+    }
+  }, [formData.Yıl]);
+
+  const handleChange = (name, value) => {
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handlePredict = async () => {
+    try {
+      const res = await axios.post('http://172.20.10.2:5000/predict', formData);
+      setEstimatedPrice(res.data.predicted_price);
+    } catch (error) {
+      console.error(error);
+      Alert.alert('Hata', 'Fiyat tahmini yapılamadı.');
+    }
+  };
+
+  const renderPicker = (label, field, options) => (
+    <View>
+      <Text style={styles.label}>{label}</Text>
+      <Picker
+        selectedValue={formData[field]}
+        onValueChange={(value) => handleChange(field, value)}>
+        <Picker.Item label="Seçiniz" value="" />
+        {options.map((item) => (
+          <Picker.Item key={item} label={item.toString()} value={item} />
+        ))}
+      </Picker>
+    </View>
+  );
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.header}>Arabam Ne Kadar Eder?</Text>
+
+      {renderPicker('Marka', 'Marka', Object.keys(structuredData))}
+      {formData.Marka && renderPicker('Seri', 'Seri', seriesList)}
+      {formData.Seri && renderPicker('Model', 'Model', modelList)}
+      {formData.Model && renderPicker('Yıl', 'Yıl', yearList)}
+      {formData.Yıl && renderPicker('Yakıt Tipi', 'YakıtTipi', fuelList)}
+      {formData.YakıtTipi && renderPicker('Vites Tipi', 'VitesTipi', gearList)}
+
+      <TextInput
+        style={styles.input}
+        placeholder="Kilometre"
+        keyboardType="numeric"
+        value={formData.Kilometre}
+        onChangeText={(text) => handleChange('Kilometre', text)}
+      />
+
+      <TouchableOpacity style={styles.button} onPress={handlePredict}>
+        <Text style={styles.buttonText}>Fiyatı Tahmin Et</Text>
+      </TouchableOpacity>
+
+      {estimatedPrice !== null && (
+        <View style={styles.resultBox}>
+          <Text style={styles.resultText}>Tahmini Fiyat: {estimatedPrice.toLocaleString()} TL</Text>
+        </View>
+      )}
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flexGrow: 1,
+    padding: 20,
+    backgroundColor: '#eef1f5',
+    justifyContent: 'center',
+  },
+  header: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#007bff',
+  },
+  label: {
+    marginTop: 10,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  input: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 16,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#28a745',
+    padding: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  resultBox: {
+    backgroundColor: '#fff',
+    marginTop: 20,
+    padding: 20,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  resultText: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+});
