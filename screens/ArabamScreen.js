@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
-import structuredData from '../data/carData.json'; // dışa aktarılan json yapısı burada olacak
+import structuredData from '../data/carData.json';
 
 export default function ArabamScreen() {
   const [formData, setFormData] = useState({
@@ -28,7 +28,7 @@ export default function ArabamScreen() {
         Object.keys(structuredData[formData.Marka] || {}).map(model => model.split(' ')[0])
       );
       setSeriesList(Array.from(seriesSet));
-      setFormData({ ...formData, Seri: '', Model: '', Yıl: '', YakıtTipi: '', VitesTipi: '' });
+      setFormData(prev => ({ ...prev, Seri: '', Model: '', Yıl: '', YakıtTipi: '', VitesTipi: '' }));
     }
   }, [formData.Marka]);
 
@@ -36,7 +36,7 @@ export default function ArabamScreen() {
     if (formData.Marka && formData.Seri) {
       const models = Object.keys(structuredData[formData.Marka] || {}).filter(model => model.startsWith(formData.Seri));
       setModelList(models);
-      setFormData({ ...formData, Model: '', Yıl: '', YakıtTipi: '', VitesTipi: '' });
+      setFormData(prev => ({ ...prev, Model: '', Yıl: '', YakıtTipi: '', VitesTipi: '' }));
     }
   }, [formData.Seri]);
 
@@ -45,7 +45,7 @@ export default function ArabamScreen() {
       const options = structuredData[formData.Marka][formData.Model] || [];
       const years = Array.from(new Set(options.map(opt => opt.Yıl))).sort();
       setYearList(years);
-      setFormData({ ...formData, Yıl: '', YakıtTipi: '', VitesTipi: '' });
+      setFormData(prev => ({ ...prev, Yıl: '', YakıtTipi: '', VitesTipi: '' }));
     }
   }, [formData.Model]);
 
@@ -66,11 +66,17 @@ export default function ArabamScreen() {
 
   const handlePredict = async () => {
     try {
-      const res = await axios.post('http://172.20.10.2:5000/predict', formData);
-      setEstimatedPrice(res.data.predicted_price);
+      const payload = {
+        ...formData,
+        Kilometre: parseInt(formData.Kilometre) || 0
+      };
+
+      const res = await axios.post('http://192.168.137.1:5000/predict', payload);
+      const price = res.data.estimated_price || res.data.predicted_price;
+      setEstimatedPrice(price);
     } catch (error) {
-      console.error(error);
-      Alert.alert('Hata', 'Fiyat tahmini yapılamadı.');
+      console.error('Tahmin hatası:', error.response?.data || error.message);
+      Alert.alert('Hata', error.response?.data?.msg || 'Fiyat tahmini yapılamadı.');
     }
   };
 
@@ -103,7 +109,7 @@ export default function ArabamScreen() {
         style={styles.input}
         placeholder="Kilometre"
         keyboardType="numeric"
-        value={formData.Kilometre}
+        value={formData.Kilometre.toString()}
         onChangeText={(text) => handleChange('Kilometre', text)}
       />
 
@@ -113,7 +119,10 @@ export default function ArabamScreen() {
 
       {estimatedPrice !== null && (
         <View style={styles.resultBox}>
-          <Text style={styles.resultText}>Tahmini Fiyat: {estimatedPrice.toLocaleString()} TL</Text>
+          <Text style={styles.resultTitle}>Tahmin Sonucu</Text>
+          <Text style={styles.resultText}>
+            {Number(estimatedPrice).toLocaleString()} TL
+          </Text>
         </View>
       )}
     </ScrollView>
@@ -160,13 +169,26 @@ const styles = StyleSheet.create({
   },
   resultBox: {
     backgroundColor: '#fff',
-    marginTop: 20,
-    padding: 20,
-    borderRadius: 10,
+    marginTop: 30,
+    padding: 24,
+    borderRadius: 12,
     alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#28a745',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 6,
+    elevation: 5,
+  },
+  resultTitle: {
+    fontSize: 18,
+    color: '#28a745',
+    marginBottom: 8,
+    fontWeight: '600',
   },
   resultText: {
-    fontSize: 20,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
   },

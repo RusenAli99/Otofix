@@ -13,7 +13,7 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      const res = await axios.post('http://172.20.10.2:5000/api/auth/login', {  
+      const res = await axios.post('http://192.168.137.1:3000/api/auth/login', {  
         email,
         password
       });

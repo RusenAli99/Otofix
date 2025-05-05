@@ -17,20 +17,22 @@ def home():
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.get_json()
+    try:
+        data = request.get_json()
 
-    marka = le_marka.transform([data['Marka']])[0]
-    model_adi = le_model.transform([data['Model']])[0]
-    yil = data['Yıl']
-    yakit = le_yakit.transform([data['YakıtTipi']])[0]
-    vites = le_vites.transform([data['VitesTipi']])[0]
-    km = data['Kilometre']
+        marka = le_marka.transform([data['Marka']])[0]
+        model_adi = le_model.transform([data['Model']])[0]
+        yil = int(data['Yıl'])
+        yakit = le_yakit.transform([data['YakıtTipi']])[0]
+        vites = le_vites.transform([data['VitesTipi']])[0]
+        km = int(data['Kilometre'])
 
-    input_data = np.array([[marka, model_adi, yil, yakit, vites, km]])
+        input_data = np.array([[marka, model_adi, yil, yakit, vites, km]])
+        pred_price = model.predict(input_data)[0]
 
-    pred_price = model.predict(input_data)[0]
-
-    return jsonify({'estimated_price': int(pred_price)})
+        return jsonify({'estimated_price': int(pred_price)})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
