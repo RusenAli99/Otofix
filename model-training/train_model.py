@@ -43,3 +43,4 @@ joblib.dump(le_yakit, 'le_yakit.pkl')
 joblib.dump(le_vites, 'le_vites.pkl')
 
 print("✅ Model ve LabelEncoder'lar başarıyla kaydedildi.")
+
