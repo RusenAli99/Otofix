@@ -42,79 +42,78 @@ export default function ChatScreen({ navigation }) {
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <View style={styles.inner}>
+            {/* Başlık ve Logo */}
+            <View style={styles.header}>
+              <Text style={styles.headerText}>🔧 Yedek Parça Asistanı</Text>
+              <Image
+                source={require('../assets/otofix_logo.jpg')}
+                style={styles.logo}
+              />
+            </View>
 
-          {/* Başlık ve Logo */}
-          <View style={styles.header}>
-            <Text style={styles.headerText}>🔧 Yedek Parça Asistanı</Text>
-            <Image
-              source={require('../assets/otofix_logo.jpg')}
-              style={styles.logo}
-            />
-          </View>
-
-          {/* Mesajlar */}
-          <View style={styles.chatBox}>
-            {messages.map((item) => (
-              <View
-                key={item.id}
-                style={[
-                  styles.messageBubble,
-                  item.sender === 'user' ? styles.userBubble : styles.botBubble,
-                ]}
-              >
-                <Text style={styles.messageText}>{item.text}</Text>
-              </View>
-            ))}
-          </View>
-
-          {/* Mesaj Gönderme Alanı */}
-          <View style={styles.inputArea}>
-            <TextInput
-              style={styles.input}
-              placeholder="Arıza yazın..."
-              placeholderTextColor="#999"
-              value={inputText}
-              onChangeText={setInputText}
-            />
-            <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
-              <Text style={{ color: '#fff', fontWeight: 'bold' }}>➤</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Önerilen Parçalar */}
-          {suggestedParts.length > 0 && (
-            <>
-              <Text style={styles.partsTitle}>💡 Önerilen Parçalar</Text>
-              {suggestedParts.map((item) => (
-                <View key={item.id} style={styles.partCard}>
-                  <View>
-                    <Text style={styles.partName}>🔩 {item.name}</Text>
-                    <Text style={styles.partPrice}>{item.price}</Text>
-                  </View>
-                  <TouchableOpacity style={styles.cartButton}>
-                    <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sepete Ekle</Text>
-                  </TouchableOpacity>
+            {/* Mesajlar */}
+            <View style={styles.chatBox}>
+              {messages.map((item) => (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.messageBubble,
+                    item.sender === 'user' ? styles.userBubble : styles.botBubble,
+                  ]}
+                >
+                  <Text style={styles.messageText}>{item.text}</Text>
                 </View>
               ))}
-            </>
-          )}
+            </View>
 
-          {/* Fiyat Listesi Butonu */}
-          <TouchableOpacity
-            style={styles.priceListButton}
-            onPress={() => navigation.navigate('FiyatListesi')}
-          >
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>📋 Yedek Parça Fiyat Listesi</Text>
-          </TouchableOpacity>
+            {/* Mesaj Gönderme Alanı */}
+            <View style={styles.inputArea}>
+              <TextInput
+                style={styles.input}
+                placeholder="Arıza yazın..."
+                placeholderTextColor="#999"
+                value={inputText}
+                onChangeText={setInputText}
+              />
+              <TouchableOpacity style={styles.sendButton} onPress={sendMessage}>
+                <Text style={{ color: '#fff', fontWeight: 'bold' }}>➤</Text>
+              </TouchableOpacity>
+            </View>
 
-          {/* Arabam Ne Kadar Butonu */}
-          <TouchableOpacity
-            style={styles.carValueButton}
-            onPress={() => navigation.navigate('Arabam')}
-          >
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>🚗 Arabam Ne Kadar?</Text>
-          </TouchableOpacity>
+            {/* Önerilen Parçalar */}
+            {suggestedParts.length > 0 && (
+              <>
+                <Text style={styles.partsTitle}>💡 Önerilen Parçalar</Text>
+                {suggestedParts.map((item) => (
+                  <View key={item.id} style={styles.partCard}>
+                    <View>
+                      <Text style={styles.partName}>🔩 {item.name}</Text>
+                      <Text style={styles.partPrice}>{item.price}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.cartButton}>
+                      <Text style={{ color: '#fff', fontWeight: 'bold' }}>Sepete Ekle</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </>
+            )}
 
+            {/* Butonlar */}
+            <TouchableOpacity
+              style={styles.priceListButton}
+              onPress={() => navigation.navigate('FiyatListesi')}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>📋 Yedek Parça Fiyat Listesi</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.carValueButton}
+              onPress={() => navigation.navigate('Arabam')}
+            >
+              <Text style={{ color: '#fff', fontWeight: 'bold' }}>🚗 Arabam Ne Kadar?</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -127,8 +126,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f2f5f9',
   },
   container: {
-    padding: 16,
+    alignItems: 'center',
     paddingBottom: 30,
+  },
+  inner: {
+    width: '100%',
+    maxWidth: 600,
+    padding: 16,
   },
   header: {
     flexDirection: 'row',

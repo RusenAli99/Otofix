@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
 import axios from 'axios';
 import { Picker } from '@react-native-picker/picker';
 import structuredData from '../data/carData.json';
@@ -43,7 +43,7 @@ export default function ArabamScreen() {
   useEffect(() => {
     if (formData.Marka && formData.Model) {
       const options = structuredData[formData.Marka][formData.Model] || [];
-      const years = Array.from(new Set(options.map(opt => opt.Yıl))).sort();
+      const years = Array.from(new Set(options.map(opt => String(opt.Yıl)))).sort();
       setYearList(years);
       setFormData(prev => ({ ...prev, Yıl: '', YakıtTipi: '', VitesTipi: '' }));
     }
@@ -52,7 +52,7 @@ export default function ArabamScreen() {
   useEffect(() => {
     if (formData.Marka && formData.Model && formData.Yıl) {
       const options = structuredData[formData.Marka][formData.Model] || [];
-      const filtered = options.filter(opt => opt.Yıl === formData.Yıl);
+      const filtered = options.filter(opt => String(opt.Yıl) === String(formData.Yıl));
       const fuels = Array.from(new Set(filtered.map(opt => opt.YakıtTipi)));
       const gears = Array.from(new Set(filtered.map(opt => opt.VitesTipi)));
       setFuelList(fuels);
@@ -67,74 +67,90 @@ export default function ArabamScreen() {
   const handlePredict = async () => {
     try {
       const payload = {
-        ...formData,
+        Marka: formData.Marka,
+        Model: formData.Model,
+        Yıl: formData.Yıl,
+        YakıtTipi: formData.YakıtTipi,
+        VitesTipi: formData.VitesTipi,
         Kilometre: parseInt(formData.Kilometre) || 0
       };
 
-      const res = await axios.post('http://192.168.137.1:5000/predict', payload);
+      const res = await axios.post('http://172.20.10.2:5000/predict', payload);
       const price = res.data.estimated_price || res.data.predicted_price;
       setEstimatedPrice(price);
     } catch (error) {
       console.error('Tahmin hatası:', error.response?.data || error.message);
-      Alert.alert('Hata', error.response?.data?.msg || 'Fiyat tahmini yapılamadı.');
+      Alert.alert('Hata', error.response?.data?.error || 'Fiyat tahmini yapılamadı.');
     }
   };
 
   const renderPicker = (label, field, options) => (
-    <View>
+    <View style={styles.pickerGroup}>
       <Text style={styles.label}>{label}</Text>
-      <Picker
-        selectedValue={formData[field]}
-        onValueChange={(value) => handleChange(field, value)}>
-        <Picker.Item label="Seçiniz" value="" />
-        {options.map((item) => (
-          <Picker.Item key={item} label={item.toString()} value={item} />
-        ))}
-      </Picker>
+      <View style={styles.pickerWrapper}>
+        <Picker
+          selectedValue={formData[field]}
+          onValueChange={(value) => handleChange(field, value)}
+          style={styles.picker}
+          dropdownIconColor="#555"
+        >
+          <Picker.Item label="Seçiniz" value="" />
+          {options.map((item) => (
+            <Picker.Item key={item} label={item.toString()} value={item} />
+          ))}
+        </Picker>
+      </View>
     </View>
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.header}>Arabam Ne Kadar Eder?</Text>
+    <ScrollView contentContainerStyle={styles.scroll}>
+      <View style={styles.container}>
+        <Text style={styles.header}>Arabam Ne Kadar Eder?</Text>
 
-      {renderPicker('Marka', 'Marka', Object.keys(structuredData))}
-      {formData.Marka && renderPicker('Seri', 'Seri', seriesList)}
-      {formData.Seri && renderPicker('Model', 'Model', modelList)}
-      {formData.Model && renderPicker('Yıl', 'Yıl', yearList)}
-      {formData.Yıl && renderPicker('Yakıt Tipi', 'YakıtTipi', fuelList)}
-      {formData.YakıtTipi && renderPicker('Vites Tipi', 'VitesTipi', gearList)}
+        {renderPicker('Marka', 'Marka', Object.keys(structuredData))}
+        {formData.Marka && renderPicker('Seri', 'Seri', seriesList)}
+        {formData.Seri && renderPicker('Model', 'Model', modelList)}
+        {formData.Model && renderPicker('Yıl', 'Yıl', yearList)}
+        {formData.Yıl && renderPicker('Yakıt Tipi', 'YakıtTipi', fuelList)}
+        {formData.YakıtTipi && renderPicker('Vites Tipi', 'VitesTipi', gearList)}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Kilometre"
-        keyboardType="numeric"
-        value={formData.Kilometre.toString()}
-        onChangeText={(text) => handleChange('Kilometre', text)}
-      />
+        <TextInput
+          style={styles.input}
+          placeholder="Kilometre"
+          keyboardType="numeric"
+          value={formData.Kilometre.toString()}
+          onChangeText={(text) => handleChange('Kilometre', text)}
+        />
 
-      <TouchableOpacity style={styles.button} onPress={handlePredict}>
-        <Text style={styles.buttonText}>Fiyatı Tahmin Et</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handlePredict}>
+          <Text style={styles.buttonText}>Fiyatı Tahmin Et</Text>
+        </TouchableOpacity>
 
-      {estimatedPrice !== null && (
-        <View style={styles.resultBox}>
-          <Text style={styles.resultTitle}>Tahmin Sonucu</Text>
-          <Text style={styles.resultText}>
-            {Number(estimatedPrice).toLocaleString()} TL
-          </Text>
-        </View>
-      )}
+        {estimatedPrice !== null && (
+          <View style={styles.resultBox}>
+            <Text style={styles.resultTitle}>Tahmin Sonucu</Text>
+            <Text style={styles.resultText}>
+              {Number(estimatedPrice).toLocaleString()} TL
+            </Text>
+          </View>
+        )}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  scroll: {
     flexGrow: 1,
-    padding: 20,
+    alignItems: 'center',
+    paddingVertical: 20,
     backgroundColor: '#eef1f5',
-    justifyContent: 'center',
+  },
+  container: {
+    width: '100%',
+    maxWidth: 600,
+    paddingHorizontal: 20,
   },
   header: {
     fontSize: 26,
@@ -143,10 +159,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#007bff',
   },
+  pickerGroup: {
+    marginBottom: 12,
+  },
+  pickerWrapper: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    overflow: 'hidden',
+    minHeight: Platform.OS === 'web' ? 45 : undefined,
+    justifyContent: 'center',
+  },
+  picker: {
+    height: Platform.OS === 'web' ? 45 : undefined,
+    width: '100%',
+    fontSize: 16,
+  },
   label: {
-    marginTop: 10,
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 4,
   },
   input: {
     backgroundColor: '#fff',

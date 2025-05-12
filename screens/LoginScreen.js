@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Image, Alert, Platform } from 'react-native';
 import axios from 'axios';
 
 export default function LoginScreen({ navigation }) {
@@ -13,9 +13,9 @@ export default function LoginScreen({ navigation }) {
     }
 
     try {
-      const res = await axios.post('http://192.168.137.1:3000/api/auth/login', {  
+      const res = await axios.post('http://172.20.10.2:3000/api/auth/login', {
         email,
-        password
+        password,
       });
 
       Alert.alert('Başarılı', 'Giriş başarılı!');
@@ -32,15 +32,11 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Image
-        source={require('../assets/otofix_logo.jpg')}
-        style={styles.logo}
-      />
-
+      <Image source={require('../assets/otofix_logo.jpg')} style={styles.logo} />
       <Text style={styles.title}>Giriş Yap</Text>
 
       <TextInput
-        style={styles.input}
+        style={[styles.input, Platform.OS === 'web' && styles.inputWeb]}
         placeholder="E-posta"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -48,7 +44,7 @@ export default function LoginScreen({ navigation }) {
         onChangeText={setEmail}
       />
       <TextInput
-        style={styles.input}
+        style={[styles.input, Platform.OS === 'web' && styles.inputWeb]}
         placeholder="Şifre"
         secureTextEntry
         value={password}
@@ -67,34 +63,54 @@ export default function LoginScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#eef1f5' },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    padding: 20,
+    backgroundColor: '#eef1f5',
+    alignItems: 'center',
+  },
   logo: {
     width: 240,
     height: 80,
     resizeMode: 'contain',
-    alignSelf: 'center',
     marginBottom: 24,
   },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 24, textAlign: 'center' },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    textAlign: 'center',
+  },
   input: {
     backgroundColor: '#fff',
     padding: 12,
     borderRadius: 10,
     marginBottom: 16,
-    fontSize: 16
+    fontSize: 16,
+    width: '100%',
+  },
+  inputWeb: {
+    maxWidth: 400,
   },
   button: {
     backgroundColor: '#007bff',
     padding: 14,
     borderRadius: 10,
-    alignItems: 'center'
+    alignItems: 'center',
+    width: '100%',
+    maxWidth: 400,
   },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: 'bold' },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
   switchText: {
     marginTop: 16,
     fontSize: 14,
     color: '#007bff',
     textAlign: 'center',
-    textDecorationLine: 'underline'
-  }
+    textDecorationLine: 'underline',
+  },
 });

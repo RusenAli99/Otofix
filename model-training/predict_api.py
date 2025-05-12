@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # ← CORS eklendi
 import joblib
 import numpy as np
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})  # ← CORS yapılandırması düzeltildi
 
 # Modeli ve encoderları yükle
 model = joblib.load('car_price_model.pkl')
